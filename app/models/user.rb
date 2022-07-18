@@ -17,18 +17,20 @@ class User < ApplicationRecord
   validates :password, length: { minimum: 6, allow_nil: true }
 
   before_validation :ensure_session_token
-  
+
   attr_reader :password
 
   # Remember: `has_many` is just a method where the first argument is the name
   # of the association and the second argument is an options hash.
   has_many :cats,
     foreign_key: :owner_id,
-    dependent: :destroy
+    dependent: :destroy,
+    inverse_of: :owner
 
   has_many :cat_rental_requests,
     foreign_key: :requester_id,
-    dependent: :destroy
+    dependent: :destroy,
+    inverse_of: :requester
 
   def self.find_by_credentials(username, password)
     user = User.find_by(username: username)
@@ -45,13 +47,13 @@ class User < ApplicationRecord
     @password = password
     self.password_digest = BCrypt::Password.create(password)
   end
-  
+
   def reset_session_token!
     self.session_token = generate_unique_session_token
     self.save!
     self.session_token
   end
-  
+
   def owns_cat?(cat)
     cat.owner == self
   end
